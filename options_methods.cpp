@@ -44,11 +44,76 @@ double BlackScholesPricer::calculatePrice(const Option& option, const MarketData
 
 // BP
 double BinomialPricer::calculatePrice(const Option& option, const MarketData& marketData) {
-    // Implementation would include:
-    // 1. Build binomial tree
-    // 2. Calculate option value at each node
-    // 3. Work backwards to get present value
-    return 0.0;
+    // Extract parameters
+    double S = marketData.getSpot();
+    double K = option.getStrike();
+    double r = marketData.getRiskFreeRate();
+    double sigma = marketData.getVolatility();
+    double T = option.getExpiry();
+
+    // Number of time steps (can be adjusted for accuracy vs. performance)
+    const int N = 100;
+    double dt = T/N;
+
+    // Calculate up and down factors
+    double u = exp(sigma * sqrt(dt));
+    double d = 1.0/u;
+
+    // Calculate risk-neutral probability
+    double p = (exp(r * dt) - d)/(u - d);
+
+    // Initialize price tree
+    std::vector<std::vector<double>> priceTree(N + 1);
+    std::vector<std::vector<double>> optionTree(N + 1);
+
+    // Initialize size of each time step in the tree
+    for(int i = 0; i <= N; i++) {
+        priceTree[i].resize(i + 1);
+        optionTree[i].resize(i + 1);
+    }
+
+    // Build price tree forward
+    priceTree[0][0] = S;
+    for(int i = 1; i <= N; i++) {
+        for(int j = 0; j <= i; j++) {
+            int up_moves = j;
+            int down_moves = i - j;
+            priceTree[i][j] = S * pow(u, up_moves) * pow(d, down_moves);
+        }
+    }
+
+    // Initialize option values at expiration
+    for(int j = 0; j <= N; j++) {
+        if(option.getType() == Option::Type::CALL) {
+            optionTree[N][j] = std::max(0.0, priceTree[N][j] - K);
+        } else {
+            optionTree[N][j] = std::max(0.0, K - priceTree[N][j]);
+        }
+    }
+
+// Work backwards through the tree
+    for(int i = N-1; i >= 0; i--) {
+        for(int j = 0; j <= i; j++) {
+            // Calculate holding value (European case)
+            double holding_value = exp(-r * dt) * (p * optionTree[i+1][j+1] + (1-p) * optionTree[i+1][j]);
+
+            if(option.getStyle() == Option::Style::AMERICAN) {
+                // For American options, compare with immediate exercise value
+                double exercise_value;
+                if(option.getType() == Option::Type::CALL) {
+                    exercise_value = std::max(0.0, priceTree[i][j] - K);
+                } else {
+                    exercise_value = std::max(0.0, K - priceTree[i][j]);
+                }
+
+                optionTree[i][j] = std::max(holding_value, exercise_value);
+                } else {
+                optionTree[i][j] = holding_value;
+            }
+        }
+    }
+    // Return price (root of the option tree)
+    return optionTree[0][0];
 }
 
 
