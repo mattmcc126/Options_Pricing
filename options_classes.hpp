@@ -101,9 +101,11 @@ class StatisticalAnalyzer {
             double pValue;
             double confidenceInterval;
             bool isSignificant;
+            double mean_difference;
+            double standard_deviation;
         };
 
-        AnalysisResult analyzePricingDifference(const std::vector<double>& prices1, const std::vector<double>& prices2);
+        AnalysisResult analyzePricingDifference(const std::vector<double>& prices1, const std::vector<double>& prices2) const;
 };
 
 
@@ -127,9 +129,7 @@ class TradingDecision {
 
 /*
 
-Potential for future implementation:
-    - Fetch live market data and make high frequency decisions 
-
+Maybe to implement?
 
 class MarketDataFetcher {
 public:
