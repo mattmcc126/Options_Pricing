@@ -9,10 +9,12 @@
 
 // Enhanced utility functions
 namespace Utils {
+    // Normal cdf 
     double normalCDF(double x) {
         return 0.5 * (1 + erf(x / sqrt(2.0)));
     }
 
+    // Normal PDF 
     double normalPDF(double x) {
         return (1.0 / sqrt(2.0 * M_PI)) * exp(-0.5 * x * x);
     }
@@ -40,7 +42,7 @@ double BlackScholesPricer::calculatePrice(const Option& option, const MarketData
         throw std::invalid_argument("Black-Scholes model only works for European options");
     }
 
-    // Add validation checks
+    // Added validation checks
     if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) {
         throw std::invalid_argument("Invalid parameters: All values must be positive");
     }
@@ -67,7 +69,7 @@ double BinomialPricer::calculatePrice(const Option& option, const MarketData& ma
     const double sigma = marketData.getVolatility();
     const double T = option.getExpiry();
 
-    // Add validation
+    // Added validation
     if (S <= 0 || K <= 0 || T <= 0 || sigma <= 0) {
         throw std::invalid_argument("Invalid parameters: All values must be positive");
     }
@@ -82,7 +84,7 @@ double BinomialPricer::calculatePrice(const Option& option, const MarketData& ma
     const double p = (exp(r * dt) - d)/(u - d);
     const double discount = exp(-r * dt);
 
-    // Use single vector for efficiency (avoid 2D vector)
+    // Using single vector for efficiency (avoided 2D vector)
     std::vector<double> values(N + 1);
     const bool isCall = option.getType() == Option::Type::CALL;
 
@@ -149,8 +151,8 @@ StatisticalAnalyzer::AnalysisResult StatisticalAnalyzer::analyzePricingDifferenc
         p_value,
         margin_of_error,
         p_value < 0.05,
-        mean_diff,    // Added to track average difference
-        std_dev      // Added to track volatility of differences
+        mean_diff,    
+        std_dev      
     };
 }
 
@@ -162,7 +164,7 @@ TradingDecision::Action TradingDecision::makeDecision(const Option& option, cons
     }
 
     // Generate a series of prices by varying volatility slightly
-    const int num_samples = 30;  // Number of price samples to generate
+    const int num_samples = 30;  
     std::vector<double> prices1, prices2;
     prices1.reserve(num_samples);
     prices2.reserve(num_samples);
